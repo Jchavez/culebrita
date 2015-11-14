@@ -68,9 +68,8 @@ function run(){
 		clearTimeout(config.runTimeout);
 		return;
 	}
-	
-	if(moves.length == 0){
 
+	if(moves.length == 0){
 		switch(config.search){
 			case 'A* - H1':
 				findpath_a("H1");
@@ -83,17 +82,15 @@ function run(){
 				break;
 		}
 	}else{
-
 		move(moves.shift());
 	}
-
 	refresh_view();
 
 	clearTimeout(config.runTimeout);
-	config.runTimeout = setTimeout(run, 100);
+	config.runTimeout = setTimeout(run, 100); 
+}
 
 
-//Busqueda A*
 function findpath_a(search_type){
 	postMessage("running " + search_type);
 
@@ -108,6 +105,7 @@ function findpath_a(search_type){
 			closedList[i][j] = 0;
 		}
 	}
+	
 
 	openList.push(new Node(null,snake[0],new Array(),0,heuristic_estimate(snake[0],food,search_type)));
 
@@ -133,7 +131,7 @@ function findpath_a(search_type){
 
 		closedList[n.point.x][n.point.y] = 1;
 		
-	
+
 		if(closedList[n.point.x][n.point.y-1] == 0 && (squares[n.point.x][n.point.y-1] == 0 || squares[n.point.x][n.point.y-1] == 2))
 			n.children.unshift(new Node(n,new Point(n.point.x,n.point.y-1),new Array(),n.g_score+1,heuristic_estimate(new Point(n.point.x,n.point.y-1),food,search_type)));
 		if(closedList[n.point.x+1][n.point.y] == 0 && (squares[n.point.x+1][n.point.y] == 0 || squares[n.point.x+1][n.point.y] == 2))
@@ -148,7 +146,7 @@ function findpath_a(search_type){
 
 				openList.push(n.children[i]);
 			}else{
-		
+
 				if(n.children[i].f_score < openList[index].f_score){
 
 					for(var j=0;j<openList[index].children.length;j++){
@@ -156,9 +154,9 @@ function findpath_a(search_type){
 					}
 
 					n.children[i].children = openList[index].children;
-		
+
 					openList.splice(index,1);
-		
+
 					openList.push(n.children[i]);
 
 					update_scores(n.children[i]);
@@ -174,7 +172,7 @@ function update_scores(parent){
 		parent.children[i].g_score = parent.g_score+1;
 		parent.children[i].h_score = heuristic_estimate(parent.children[i].point);
 		parent.children[i].f_score = parent.children[i].g_score + parent.children[i].h_score;
-
+		//recursively update any child nodes that this child might have.
 		update_scores(parent.children[i]);
 	}
 }
@@ -199,7 +197,6 @@ function heuristic_estimate(point1, point2,search_type){
 			return (heuristic_estimate_1(point1,point2) + heuristic_estimate_2(point1,point2))/2;
 	}
 }
-
 
 function heuristic_estimate_1(point1,point2){
 	return Math.sqrt(Math.pow(point1.x-point2.x,2) + Math.pow(point1.y-point2.y,2));

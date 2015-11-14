@@ -5,7 +5,7 @@ var canvas;
 //configuraciones
 var config = new Object();
 config.grid_size = 20;
-config.number_obstacles = 5;
+config.number_obstacles = 50;
 config.square_size = 30;
 config.snake_length = 5;
 config.search = 'A* - H1';
