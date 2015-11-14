@@ -1,0 +1,24 @@
+<html>
+<head>
+	<title>Culebrita Inteligencia Artificial * 4pm-6pm</title>
+	<script src="culebrita.js"></script>
+</head>
+
+<body onload="init();">
+	<input type="button" value="Iniciar" onclick="start();">&nbsp;&nbsp;
+	<input type="button" value="Parar" onclick="stop();">&nbsp;&nbsp;
+	<br />
+	<br />
+	<canvas id="canvas" width="600" height="600" style="margin:0 auto;">
+	</canvas>
+
+	<br />
+	<br />
+	<div id="stats" style="width:300px; margin:0 auto;">
+		Numero de comidas: <span id="food_val"></span><br>
+		Movimientos: <span id="moves_val"></span><br>
+		Promedio Movimientos: <span id="avg_moves_val"></span><br>
+		Nodos procesados: <span id="avg_nodes_val"></span><br>
+	</div>
+</body>
+</html>
