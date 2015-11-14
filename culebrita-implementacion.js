@@ -48,8 +48,6 @@ function init(){
 	refresh_view();
 }
 
-//this is the function that is called whenever the worker receives a message.
-//based on the content of the message (event.data.do), do the appropriate action.
 onmessage = function(event) {
 	switch(event.data.do){
 		case 'start':
@@ -65,16 +63,14 @@ onmessage = function(event) {
 	}
 }
 
-//This function runs repeatedly. Checks if we should move, or search for more moves, and carries out the moves.
 function run(){
-	//stop at 10 food, for statistical purposes:
 	if(stats.food >= 10){
 		clearTimeout(config.runTimeout);
 		return;
 	}
-	//moves is a list of moves that the snake is to carry out. IF there are no moves left, then run a search to find more.
+	
 	if(moves.length == 0){
-		//no moves left, so search for more based on the current search selected.
+
 		switch(config.search){
 			case 'A* - H1':
 				findpath_a("H1");
@@ -87,47 +83,45 @@ function run(){
 				break;
 		}
 	}else{
-		//we still have moves left, so move the snake to the next square.
+
 		move(moves.shift());
 	}
-	//send the new state to the browser
+
 	refresh_view();
-	//wait and then continue with the next move.
+
 	clearTimeout(config.runTimeout);
-	config.runTimeout = setTimeout(run, 100);//need to wait a bit, otherwise CPU get overloaded and browser becomes unresponsive.
-}
+	config.runTimeout = setTimeout(run, 100);
 
 
-//A* search, based on selected heuristic
+//Busqueda A*
 function findpath_a(search_type){
 	postMessage("running " + search_type);
-	// Creating our Open and Closed Lists
+
 	var openList = new Array();
 	var closedList = new Array(config.grid_size);
 	for(var i=0;i<config.grid_size;i++){
 		closedList[i] = new Array(config.grid_size);
 	}
-	//initialize closedList values to 0
+
 	for(var i=0;i<config.grid_size;i++){
 		for(var j=0;j<config.grid_size;j++){
 			closedList[i][j] = 0;
 		}
 	}
-	
-	// Adding our starting point to Open List
+
 	openList.push(new Node(null,snake[0],new Array(),0,heuristic_estimate(snake[0],food,search_type)));
-	// Loop while openList contains some data.
+
 	while (openList.length != 0) {
-		//pick the node in openset that has the lowest f_score
+
 		openList.sort(function(a,b){return a.f_score - b.f_score})
 		var n = openList.shift();
 		
 		if(closedList[n.point.x][n.point.y] == 1)
 			continue;
 		stats.count++;
-		// Check if node is food
+
 		if (squares[n.point.x][n.point.y] == 2) {
-			//if we have reached food, climb up the tree until the root to obtain path
+
 			do{
 				moves.unshift(n.point);
 				if(squares[n.point.x][n.point.y] == 0)
@@ -136,10 +130,10 @@ function findpath_a(search_type){
 			}while(n.parent != null)
 			break;
 		}
-		// Add current node to closedList
+
 		closedList[n.point.x][n.point.y] = 1;
 		
-		// Add adjacent nodes to openlist to be processed.
+	
 		if(closedList[n.point.x][n.point.y-1] == 0 && (squares[n.point.x][n.point.y-1] == 0 || squares[n.point.x][n.point.y-1] == 2))
 			n.children.unshift(new Node(n,new Point(n.point.x,n.point.y-1),new Array(),n.g_score+1,heuristic_estimate(new Point(n.point.x,n.point.y-1),food,search_type)));
 		if(closedList[n.point.x+1][n.point.y] == 0 && (squares[n.point.x+1][n.point.y] == 0 || squares[n.point.x+1][n.point.y] == 2))
@@ -151,23 +145,22 @@ function findpath_a(search_type){
 		for(var i=0;i<n.children.length;i++){
 			var index = in_openlist(openList,n.children[i]);
 			if(index < 0){
-				//node not in openList, add it.
+
 				openList.push(n.children[i]);
 			}else{
-				//found a node in openlist that we already found earlier. Check if this is a better route
+		
 				if(n.children[i].f_score < openList[index].f_score){
-					//better route, use this one instead.
-					//set the new parent for all the old child nodes
+
 					for(var j=0;j<openList[index].children.length;j++){
 						openList[index].children[j].parent = n.children[i];
 					}
-					//give the children to the new parent
+
 					n.children[i].children = openList[index].children;
-					//remove the old node from openList
+		
 					openList.splice(index,1);
-					//add new node to openList
+		
 					openList.push(n.children[i]);
-					//Update the scores for all child nodes.
+
 					update_scores(n.children[i]);
 				}
 			}
@@ -175,18 +168,18 @@ function findpath_a(search_type){
 	}
 }
 
-//updates scores of child nodes
+
 function update_scores(parent){
 	for(var i=0;i<parent.children.length;i++){
 		parent.children[i].g_score = parent.g_score+1;
 		parent.children[i].h_score = heuristic_estimate(parent.children[i].point);
 		parent.children[i].f_score = parent.children[i].g_score + parent.children[i].h_score;
-		//recursively update any child nodes that this child might have.
+
 		update_scores(parent.children[i]);
 	}
 }
 
-//check is aNode is in openList. If a match is found, return index, -1 if no match
+
 function in_openlist(openList,aNode){
 	for(var i=0;i<openList.length;i++){
 		if(openList[i].point.x == aNode.point.x && openList[i].point.y == aNode.point.y)
@@ -195,7 +188,7 @@ function in_openlist(openList,aNode){
 	return -1;
 }
 
-//heuristic_estimate interface, used to keep the calls in findpath_a() simple. Check the search_type,  and call the appropriate helper function.
+
 function heuristic_estimate(point1, point2,search_type){
 	switch(search_type){
 		case "H1":
@@ -207,11 +200,11 @@ function heuristic_estimate(point1, point2,search_type){
 	}
 }
 
-//First heuristic: calculate the direct path to the food. This will usually be less than actual, because it's a slant distance.
+
 function heuristic_estimate_1(point1,point2){
 	return Math.sqrt(Math.pow(point1.x-point2.x,2) + Math.pow(point1.y-point2.y,2));
 }
-//Second heuristic: calculate the actual distance that the snake would have to travel to reach the food.
+
 function heuristic_estimate_2(point1,point2){
 	return Math.abs(point1.x-point2.x)+Math.abs(point1.y-point2.y);
 }
